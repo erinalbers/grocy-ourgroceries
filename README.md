@@ -97,6 +97,10 @@ Edit `config.json` with your Grocy API key and OurGroceries credentials:
 
 You do not have to Map products or categories, but you can if you have the need. I started with mapping, but realized there weren't many great reasons to not just delete everything and let my Grocy configurations take over. YMMV.
 
+### Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request or make a feature request, or you can also drop "appreciation" at http://buymeacoffee.com/erinalbers if you want your contribution to be more... inspirational.
+
 ## License
 
 MIT
