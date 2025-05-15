@@ -34,6 +34,9 @@ This repository contains two versions of the sync tool:
 ### Running with Python
 
 ```bash
+# Installing
+pip3 install -r requirements.txt
+
 # Run once and exit
 python3 main.py --config config.json --once
 
