@@ -58,6 +58,9 @@ docker-compose logs -f
 
 # Stop the container
 docker-compose down
+
+# Executing a manual sync from the host
+docker exec grocy-ourgroceries-sync python main.py --once 
 ```
 
 ## Configuration
