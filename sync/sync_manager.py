@@ -147,14 +147,14 @@ class SyncManager:
             ourgroceries_list_name: The name of the OurGroceries list
         """
         # Log the raw item data for debugging
-        logger.info(f"DEBUG - Raw Grocy item data: {json.dumps(grocy_item, default=str, indent=2)}")
+        logger.debug(f"Raw Grocy item data: {json.dumps(grocy_item, default=str, indent=2)}")
         
         # Get product name and category
         product_name, category_name = self._get_product_info(grocy_item)
         
         # Format quantity
         quantity_value, quantity_str = self.quantity_formatter.format_quantity(grocy_item)
-        logger.info(f"DEBUG - After formatting: product_name={product_name}, quantity_value={quantity_value}, quantity_str={quantity_str}")
+        logger.debug(f"After formatting: product_name={product_name}, quantity_value={quantity_value}, quantity_str={quantity_str}")
         
         # Map the product name if needed
         og_item_name = self.item_matcher.map_item_name(product_name)
