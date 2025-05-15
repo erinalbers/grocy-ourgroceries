@@ -1,16 +1,16 @@
 services:
-  grocy-ourgroceries-sync-v2:
+  grocy-ourgroceries-sync:
     build: .
-    container_name: grocy-ourgroceries-sync-v2
+    container_name: grocy-ourgroceries-sync
     volumes:
       - ./config.json:/app/config.json
       - ./sync_tracking.json:/app/sync_tracking.json
       - ./logs:/app/logs
     restart: unless-stopped
     environment:
-      - TZ=UTC
+      - TZ=America/Los_Angeles
       - PYTHONPATH=/app
-    command: python main.py --debug
+    command: python main.py
   test:
     build: .
     volumes:
