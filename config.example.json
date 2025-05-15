@@ -1,0 +1,31 @@
+{
+  "grocy": {
+    "api_url": "https://your-grocy-instance/api/",
+    "api_key": "your-api-key"
+  },
+  "ourgroceries": {
+    "username": "your-email@example.com",
+    "password": "your-password"
+  },
+  "sync": {
+    "interval_minutes": 30,
+    "lists": [
+      {
+        "grocy_list_id": 1,
+        "ourgroceries_list_name": "Groceries"
+      }
+    ],
+    "name_mappings": {
+      "Grocy Product Name": "OurGroceries Item Name"
+    },
+    "category_mappings": {
+      "Grocy Category Name": "OurGroceries Category Name"
+    },
+    "category_ids": {
+      "pets": "4GmqmiFehtIQgjFkDuakMC"
+    },
+    "default_category_id": "",
+    "use_categories": true,
+    "quantity_separator": " : "
+  }
+}
