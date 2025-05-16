@@ -28,8 +28,6 @@ This repository contains two versions of the sync tool:
 
 1. Clone this repository
 2. Copy `config.example.json` to `config.json` and edit with your credentials
-3. Choose which version to run (v1 or v2)
-
 
 ### Running with Python
 
