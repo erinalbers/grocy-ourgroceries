@@ -465,7 +465,7 @@ class TestOurGroceriesClient:
                 assert result == mock_ourgroceries_responses["master_list"]
                 mock_run_with_retry.assert_called_once_with(mock_client.get_master_list)
     
-    def test_get_or_create_category_found_in_master_list(self):
+    def test_get_or_create_category_found_in_category_list(self):
         """Test get_or_create_category when category is found in master list."""
         with patch('clients.ourgroceries_client.OurGroceries') as mock_og:
             mock_client = MagicMock()
@@ -474,19 +474,33 @@ class TestOurGroceriesClient:
             client = OurGroceriesClient(USERNAME, PASSWORD)
             
             # Mock get_master_list to return test data
-            with patch.object(client, 'get_master_list') as mock_get_master_list:
-                mock_get_master_list.return_value = {
-                    "list": {
-                        "items": [
-                            {"id": "cat1", "value": "Beverages", "categoryId": None},
-                            {"id": "cat2", "value": "Dairy", "categoryId": None}
-                        ]
-                    }
-                }
+            with patch.object(client, 'get_categories') as mock_get_categories:
+                mock_get_categories.return_value = {'list': 
+                    {
+                        'notes': '', 'name': '', 'id': 'Yo9ElScZec8WxayJHqR8XR', 'listType': 'CATEGORY', 'externalListAccess': 'NONE', 'versionId': 'f4xQnb7fcR5U6st3D1GRAn', 
+                        'items': [
+                            {'name': 'Beverages', 'value': 'Beverages', 'id': 'roYHsiYY3ry0Dir6m4upyh', 'sortOrder': ';d'}, 
+                            {'name': 'Refrigerated Goods', 'value': 'Refrigerated Goods', 'id': 'zAapgj4PAK56ixQXHyyZTu', 'sortOrder': 'g8'}, 
+                            {'name': 'Baked Goods', 'value': 'Baked Goods', 'id': 'lHptIF4vB5lOvu2fY9qazu', 'sortOrder': 'm2'}, 
+                            {'name': 'Snacks', 'value': 'Snacks', 'id': 'g7OwjklWQuQpQxe0UQ9SZH', 'sortOrder': ';<X'}, 
+                            {'name': 'Household', 'value': 'Household', 'id': '9bl83gDWksvax1tHY2ia83', 'sortOrder': ';PD'}, 
+                            {'name': 'Meat', 'value': 'Meat', 'id': 'zGo0TOBVTJ9NlkAfCSVtI6', 'sortOrder': 'SL'}, 
+                            {'name': 'Frozen Foods', 'value': 'Frozen Foods', 'id': 'geoeGJNZU6z3eheHbbPehF', 'sortOrder': 'c<'}, 
+                            {'name': 'Canned Goods', 'value': 'Canned Goods', 'id': 'RSZei0QMw27SVI2eIqTeCj', 'sortOrder': '6i'}, 
+                            {'name': 'Dry Goods', 'value': 'Dry Goods', 'id': 'Oye0VOYJ0VA5Op1CpWLDXA', 'sortOrder': ':U@'}, 
+                            {'name': 'Pet Supplies', 'value': 'Pet Supplies', 'id': '4GmqmiFehtIQgjFkDuakMC', 'sortOrder': ';Z:'}, 
+                            {'name': 'Condiments', 'value': 'Condiments', 'id': 'hW34b9TAbI7nfZjByBcHly', 'sortOrder': '87`'}, 
+                            {'name': 'Spices', 'value': 'Spices', 'id': 'oGCz0kkEjImj6V05B1CZeb', 'sortOrder': '9FP'},
+                            {'name': 'Sweets', 'value': 'Sweets', 'id': 'FTP7LGwuecofpLeWXEruHt'}, 
+                            {'name': 'Baking and Cooking', 'value': 'Baking and Cooking', 'id': 'Bsk4oJ7UmH23DzZJwN5zbx'}, 
+                            {'name': 'Pets', 'value': 'Pets', 'id': 'N6hqNvG2EpyJJgh0bM0fQK'}, 
+                            {'name': 'Produce', 'value': 'Produce', 'id': 'M3qgIOMh53Iirb26grPAUJ', 'sortOrder': '3l'}, 
+                            {'name': 'Meats', 'value': 'Meats', 'id': 'C8nPqMvVtT9yMEHney44QU'}
+                        ]}, 'command': 'getList'}
                 
                 result = client.get_or_create_category("list1", "Beverages")
             
-            assert result == "cat1"
+            assert result == "roYHsiYY3ry0Dir6m4upyh"
     
     def test_get_or_create_category_found_in_category_ids(self):
         """Test get_or_create_category when category is found in category_ids."""

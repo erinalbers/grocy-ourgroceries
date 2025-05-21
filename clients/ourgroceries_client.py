@@ -63,6 +63,7 @@ class OurGroceriesClient:
         self._cache = {
             'lists': [],
             'list_items': {},
+            'categories': {},
             'master_list': None,
             'last_added_item': None
         }
@@ -71,6 +72,7 @@ class OurGroceriesClient:
         self._cache_expiry = {
             'lists': 300,  # 5 minutes
             'list_items': 60,  # 1 minute
+            'categories': 60,  # 1 minute
             'master_list': 600  # 10 minutes
         }
         
@@ -78,6 +80,7 @@ class OurGroceriesClient:
         self._cache_time = {
             'lists': 0,
             'list_items': {},
+            'categories': 0,
             'master_list': 0
         }
     
@@ -297,7 +300,7 @@ class OurGroceriesClient:
                 category_id = self.get_or_create_category(list_id, category)
                 
             # Add item to list
-            logger.debug(f"Adding item '{item_value}' to list '{list_id}' with category '{category_id}'")
+            logger.info(f"Adding item '{item_value}' to list '{list_id}' with category id '{category_id}' ({category})")
             
             # Run the async add_item_to_list method with retry
             result = self._run_with_retry(
@@ -398,6 +401,90 @@ class OurGroceriesClient:
         except OurGroceriesApiError as e:
             logger.error(f"Failed to get master list: {e}")
             return {}
+        
+    def get_categories(self) -> List[Dict[str, Any]]:
+        """
+        Get all categories with caching.
+
+        Returns:
+            A list of categories
+        """
+        # Check if cache is valid
+        current_time = time.time()
+        if (current_time - self._cache_time['categories']) < self._cache_expiry['categories'] and self._cache['categories']:
+            logger.debug("Using cached categories data")
+            return self._cache['categories']
+
+        try:
+            # Run the async get_categories method with retry
+            categories_data = self._run_with_retry(self.client.get_category_items)
+            # logger.info(f"Categories data: {categories_data}")
+            # Convert to the expected format
+            formatted_categories = []
+            cat_items = categories_data.get('list',{}).get('items',[])
+            logger.info(f"Categories items: {cat_items}")
+            if isinstance(cat_items, list):
+                for item in cat_items:
+                    if isinstance(item, dict):
+                        formatted_categories.append(item)
+                    elif isinstance(item, str):
+                        # If it's a string, create a dict with name and id
+                        formatted_categories.append({'name': item, 'id': item})
+            elif isinstance(categories_data, dict) and 'categories' in categories_data:
+                formatted_categories = categories_data['categories']
+
+            # Update cache
+            self._cache['categories'] = formatted_categories
+            self._cache_time['categories'] = current_time
+            logger.info(f"Formatted category items: {formatted_categories}")
+
+            return formatted_categories
+        except OurGroceriesApiError as e:
+            logger.error(f"Failed to get categories: {e}")
+            return []
+    
+    def find_category_in_categories(self, category_name: str) -> Optional[str]:
+        """
+        Find a category by name in the categories list.
+
+        Args:
+            category_name: The name of the category
+
+        Returns:
+            The category ID or None if not found
+        """
+        categories = self.get_categories()
+        logger.info(f"Looking for category '{category_name}' in {len(categories)} categories")
+
+        for category in categories:
+            # Handle both string and dict formats
+            if isinstance(category, dict):
+                category_name_from_dict = category.get('name', '')
+                if category_name_from_dict.lower() == category_name.lower():
+                    logger.info(f"Found category ID for '{category_name}': {category.get('id')}")
+                    return category.get('id')
+
+        return None
+    
+    def find_category_in_category_mappings(self, category_name):
+        # Let's try to use the configured category IDs
+        category_name_lower = category_name.lower()
+        
+        logger.info(f"Category Mappings: {self.category_ids.items()}")
+        
+        # # First, try direct match
+        if category_name_lower in self.category_ids:
+            category_id = self.category_ids[category_name_lower]
+            logger.info(f"Using exact match category ID for '{category_name}': {category_id}")
+            return category_id
+        
+        # Try to find a partial match
+        for key, category_id in self.category_ids.items():
+            if key in category_name_lower or category_name_lower in key:
+                logger.info(f"Using partial match category ID for '{category_name}': {category_id}")
+                return category_id
+            
+        return None
     
     def get_or_create_category(self, list_id: str, category_name: str) -> Optional[str]:
         """
@@ -411,70 +498,28 @@ class OurGroceriesClient:
             The category ID or None if failed
         """
         try:
-            # First, try to get the master list
-            logger.debug(f"Looking for category '{category_name}' in master list")
+            category = self.find_category_in_categories(category_name)
             
-            try:
-                # Get the master list
-                master_list = self.get_master_list()
+            if not category: 
+                # If we get here, we need to try a different approach
+                category = self.find_category_in_category_mappings(category_name)
+            
+            if not category: 
+                # If we still can't find a match, try to create the category
+                logger.debug(f"Creating new category: {category_name}")
                 
-                # Check if we have a valid master list response
-                if isinstance(master_list, dict) and 'list' in master_list and 'items' in master_list['list']:
-                    items = master_list['list']['items']
-                    logger.debug(f"Found {len(items)} items in master list")
-                    
-                    # Look for our category
-                    for item in items:
-                        if isinstance(item, dict) and 'value' in item:
-                            if item['value'].lower() == category_name.lower():
-                                logger.debug(f"Found existing category in master list: {item}")
-                                return item.get('id')
-            except Exception as e:
-                # If this fails, we'll try the next approach
-                logger.debug(f"Error getting master list: {e}")
-            
-            # If we get here, we need to try a different approach
-            # Let's try to use the configured category IDs
-            category_name_lower = category_name.lower()
-            
-            # First, try direct match
-            if category_name_lower in self.category_ids:
-                category_id = self.category_ids[category_name_lower]
-                logger.debug(f"Using exact match category ID for '{category_name}': {category_id}")
-                return category_id
-            
-            # Try to find a partial match
-            for key, category_id in self.category_ids.items():
-                if key in category_name_lower or category_name_lower in key:
-                    logger.debug(f"Using partial match category ID for '{category_name}': {category_id}")
-                    return category_id
-            
-            # If we still can't find a match, try to create the category
-            logger.debug(f"Creating new category: {category_name}")
-            try:
+
                 # Run the async create_category method with retry
                 self._run_with_retry(self.client.create_category, category_name)
                 logger.debug(f"Category creation request sent for '{category_name}'")
                 
                 # Invalidate master list cache
                 self._cache['master_list'] = None
-                
-                # Since we can't reliably get the ID of the newly created category,
-                # we'll use the default category ID
-                if self.default_category_id:
-                    logger.debug(f"Using default category ID: {self.default_category_id}")
-                    return self.default_category_id
-                else:
-                    logger.warning(f"No default category ID configured")
-                    return None
-            except Exception as e:
-                # Still use the default category if available
-                if self.default_category_id:
-                    logger.debug(f"Using default category ID after error: {self.default_category_id}")
-                    return self.default_category_id
-                else:
-                    logger.warning(f"No default category ID configured")
-                    return None
+                self._cache['categories'] = None
+
+                category = self.find_category_in_categories(category_name)
+            
+            return category
             
         except Exception as e:
             logger.error(f"Failed to get or create category: {e}")

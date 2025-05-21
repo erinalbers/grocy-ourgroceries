@@ -1,7 +1,7 @@
 services:
-  grocy-ourgroceries-sync:
+  grocy-ourgroceries-test:
     build: .
-    container_name: grocy-ourgroceries-sync
+    container_name: grocy-ourgroceries-test
     volumes:
       - ./config.json:/app/config.json
       - ./sync_tracking.json:/app/sync_tracking.json
@@ -10,4 +10,4 @@ services:
     environment:
       - TZ=America/Los_Angeles
       - PYTHONPATH=/app
-    command: python main.py
+    command: pytest --cov=clients --cov=sync --cov=utils

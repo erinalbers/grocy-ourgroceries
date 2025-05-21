@@ -112,6 +112,12 @@ class SyncManager:
             logger.debug(f"Found OurGroceries list with ID: {og_list_id}")
             
             # Get current items in OurGroceries list
+            
+            logger.debug(f"Fetching categories from OurGroceries list {og_list_id}")
+            og_categoriess = self.ourgroceries_client.get_categories()
+            logger.debug(f"Found {len(og_categoriess)} categories in OurGroceries list")
+            logger.debug(f"Categories Found: {og_categoriess}")
+            
             logger.debug(f"Fetching items from OurGroceries list {og_list_id}")
             og_items = self.ourgroceries_client.get_list_items(og_list_id)
             logger.debug(f"Found {len(og_items)} items in OurGroceries list")
